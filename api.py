@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import numpy as np
+import json
 
 app = FastAPI()
 
@@ -13,10 +13,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+def load_loss_data():
+    try:
+        with open('data/loss_data.json', 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {"error": "Data file not found. Please run 'python tools/generate_data.py' to generate it."}
+    except json.JSONDecodeError:
+        return {"error": "Invalid JSON data in data file."}
+
 @app.get("/api/data")
-def get_data(amplitude: float = 1.0, frequency: float = 1.0):
-    x = np.linspace(-5, 5, 100)
-    y = np.linspace(-5, 5, 100)
-    x, y = np.meshgrid(x, y)
-    z = amplitude * np.sin(frequency * np.sqrt(x**2 + y**2))
-    return {"x": x.tolist(), "y": y.tolist(), "z": z.tolist()}
+def get_data():
+    return load_loss_data()
+
