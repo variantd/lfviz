@@ -87,5 +87,3 @@ When you are finished working on the project, you can exit the virtual environme
 ```bash
 deactivate
 ```
-
-Do you have the `api.py` and `dash_app.py` files ready, or would you like me to provide them again for completeness?
