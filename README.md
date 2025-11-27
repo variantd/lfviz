@@ -1,26 +1,30 @@
-## 📉 Loss Function Landscape Analyzer (Scalable PoC)
+# 📉 Loss Function Landscape Analyzer
 
-This project is a Proof-of-Concept (PoC) for a scalable, full-stack application designed to visualize and analyze synthetic loss function landscapes. It demonstrates a **decoupled architecture** necessary for future expansion into a robust utility capable of handling complex data generation and high user traffic.
+This project is a full-stack application designed to visualize and analyze complex, synthetic loss function landscapes. It demonstrates a decoupled architecture and provides tools for visual and quantitative analysis of a simulated model training process.
 
 -----
 
 ## 🚀 Architecture
 
-The application uses a **three-tier architecture**, with the backend and frontend services running independently. This separation ensures scalability, allows for independent service updates, and enables the use of high-performance tools in each domain.
+The application uses a **three-tier architecture** with decoupled data generation, a backend API, and a frontend UI.
 
 | Layer | Technology | Role | Details |
 | :--- | :--- | :--- | :--- |
-| **Frontend (UI)** | **Plotly Dash** | Renders the interactive 3D visualizations, handles user input (sliders), and acts as the client to the API. | Built on top of Flask and React, providing a Pythonic approach to robust web UIs. |
-| **Backend (API)** | **FastAPI** | Serves as the high-performance data endpoint. It accepts parameters and returns the calculated data as JSON. | Utilizes Starlette for asynchronous request handling. |
-| **Data/Compute** | **NumPy, Plotly** | Handles the generation of the large, multi-dimensional synthetic loss function data arrays. | The core Python scientific computing libraries. |
+| **Frontend (UI)** | **Plotly Dash** | Renders interactive 3D and 2D visualizations of the loss landscape and training metrics. | Acts as a client to the data API. |
+| **Backend (API)** | **FastAPI** | Serves the pre-generated loss landscape and training run data as a high-performance JSON endpoint. | Utilizes Starlette for asynchronous request handling. |
+| **Data Generation** | **NumPy** | A suite of scripts to generate a complex, high-entropy synthetic loss landscape and simulate a training run using gradient descent. | The generated data is stored in a JSON file, decoupling data generation from the live application. |
 
 -----
 
 ## ✨ Features
 
-  * **Interactive 3D Visualization:** Displays the loss landscape as a rotatable and zoomable 3D surface plot.
-  * **Decoupled Architecture:** Clean separation of concerns between the API (data) and the UI (presentation) for scalability.
-  * **Dynamic Parameter Control:** Allows users to adjust function parameters (e.g., **Amplitude**, **Frequency**) via frontend sliders to instantly reshape the loss landscape.
+*   **Complex Synthetic Data:** Generates a high-dimensional, non-convex loss landscape with high extrema density to simulate a realistic production scenario.
+*   **Simulated Training Run:** Simulates a model training process using gradient descent and visualizes the optimization path.
+*   **Dual-View Analysis:**
+    *   **3D View:** An interactive 3D plot of the loss landscape with the training path overlaid.
+    *   **2D View:** A diagnostic plot of the loss value over the training steps.
+*   **Quantitative Stability Metrics:** Calculates and displays the standard deviation of the loss during the training run to provide insights into training stability.
+*   **Decoupled Architecture:** Clean separation between the data generation, API, and UI for scalability and maintainability.
 
 -----
 
@@ -30,19 +34,33 @@ These instructions assume you have **Python 3** and **`git`** installed on your 
 
 ### 1\. Project Structure
 
-Ensure your files are structured as follows:
+The project is structured as follows:
 
 ```
-loss-landscape-poc/
-├── api.py           # FastAPI Backend Service
-├── dash_app.py      # Plotly Dash Frontend Service
+lfviz/
+├── data/
+│   └── loss_data.json   # (Git-ignored) Generated data file
+├── tools/
+│   ├── bootstrap.sh
+│   └── generate_data.py # Script to generate the synthetic data
+├── .gitignore
+├── api.py               # FastAPI Backend Service
+├── dash_app.py          # Plotly Dash Frontend Service
 └── README.md
 ```
 
 ### 2\. Environment & Dependency Installation
 
-It is highly recommended to use a virtual environment to isolate the project dependencies.
+It is highly recommended to use a virtual environment. The `tools/bootstrap.sh` script can be used to set up the environment and install dependencies.
 
+```bash
+# 1. Make the bootstrap script executable
+chmod +x tools/bootstrap.sh
+
+# 2. Run the bootstrap script
+./tools/bootstrap.sh
+```
+Alternatively, you can set up the environment manually:
 ```bash
 # 1. Create and activate a virtual environment
 python3 -m venv venv
@@ -52,13 +70,25 @@ source venv/bin/activate
 pip install fastapi uvicorn plotly dash numpy requests
 ```
 
-### 3\. Run the Services
+### 3\. Run the Application
 
-Because this is a decoupled architecture, you must start the backend API and the frontend application in **two separate terminal sessions** or use nohup.
+The application requires three steps to run: data generation, starting the backend API, and starting the frontend UI.
 
-#### A. Start the Backend (API)
+#### A. Generate the Data
 
-The API will run on the default port **8000**.
+First, run the data generation script to create the `loss_data.json` file.
+
+```bash
+# Ensure your virtual environment is active
+source venv/bin/activate
+
+# Run the script
+python3 tools/generate_data.py
+```
+
+#### B. Start the Backend (API)
+
+The API serves the generated data and runs on port **8000**.
 
 ```bash
 # In Terminal 1 (ensure venv is active)
@@ -67,13 +97,13 @@ uvicorn api:app --reload --port 8000
 
 > **Output Confirmation:** You should see a message indicating the Uvicorn server is running at `http://127.0.0.1:8000`.
 
-#### B. Start the Frontend (Dash App)
+#### C. Start the Frontend (Dash App)
 
-The Dash app will run on the default port **8050** and will attempt to fetch data from the running API.
+The Dash app consumes the data from the API and runs on port **8050**.
 
 ```bash
 # In Terminal 2 (ensure venv is active)
-python dash_app.py
+python3 dash_app.py
 ```
 
 > **Access the App:** Open your web browser and navigate to the Dash application at: **http://localhost:8050**
@@ -82,7 +112,7 @@ python dash_app.py
 
 ### 4\. Deactivating the Environment
 
-When you are finished working on the project, you can exit the virtual environment:
+When you are finished, you can exit the virtual environment:
 
 ```bash
 deactivate
