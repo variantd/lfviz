@@ -53,14 +53,24 @@ def generate_loss_landscape(n_points=200, n_minima=15, n_maxima=15, noise_level=
     # 5. Add some random noise for higher entropy
     zz += np.random.normal(0, noise_level, zz.shape)
 
-    # 6. Perform gradient descent
-    path = perform_gradient_descent(zz, xx, yy)
+    # 6. Simulate training run
+    training_path = simulate_training_run(zz, xx, yy)
 
-    return {"x": xx.tolist(), "y": yy.tolist(), "z": zz.tolist(), "path": path}
+    # 7. Calculate stability metrics
+    loss_values = np.array(training_path)[:, 2]
+    loss_std_dev = np.std(loss_values)
 
-def perform_gradient_descent(zz, xx, yy, start_point_idx=(50, 150), n_steps=50, learning_rate=5.0):
+    return {
+        "x": xx.tolist(), 
+        "y": yy.tolist(), 
+        "z": zz.tolist(), 
+        "training_path": training_path,
+        "loss_std_dev": loss_std_dev
+    }
+
+def simulate_training_run(zz, xx, yy, start_point_idx=(50, 150), n_steps=50, learning_rate=5.0):
     """
-    Performs gradient descent on the given surface.
+    Simulates a model training run on the given surface using gradient descent.
     """
     zz = np.array(zz)
     grad_y, grad_x = np.gradient(zz)
